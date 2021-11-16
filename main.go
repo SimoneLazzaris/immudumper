@@ -9,22 +9,40 @@ import (
 	immuclient "github.com/codenotary/immudb/pkg/client"
 	"google.golang.org/grpc/metadata"
 	"immudumper/zfile"
+	"flag"
 )
+var config struct {
+        Address   string
+        Port      int
+        Username  string
+        Password  string
+        DBName    string
+}
+
+func init() {
+        flag.StringVar(&config.Address, "address", "", "IP address of immudb server")
+        flag.IntVar(&config.Port, "port", 3322, "Port number of immudb server")
+        flag.StringVar(&config.Username, "user", "immudb", "Username for authenticating to immudb")
+        flag.StringVar(&config.Password, "pass", "immudb", "Password for authenticating to immudb")
+        flag.StringVar(&config.DBName, "db", "defaultdb", "Name of the database to use")
+        flag.Parse()
+}
 
 func connect() (immuclient.ImmuClient, context.Context) {
-	opts := immuclient.DefaultOptions()
+        opts := immuclient.DefaultOptions().WithAddress(config.Address).WithPort(config.Port)
 	client, err := immuclient.NewImmuClient(opts)
 	if err != nil {
 		log.Fatal(err)
 	}
 	ctx := context.Background()
-	lr, err := client.Login(ctx, []byte(`immudb`), []byte(`immudb`))
+	lr, err := client.Login(ctx, []byte(config.Username), []byte(config.Password))
+
 	if err != nil {
 		log.Fatal(err)
 	}
 	md := metadata.Pairs("authorization", lr.Token)
 	ctx = metadata.NewOutgoingContext(ctx, md)
-	udr, err := client.UseDatabase(ctx, &schema.Database{Databasename: "defaultdb"})
+	udr, err := client.UseDatabase(ctx, &schema.Database{DatabaseName: config.DBName})
 	if err != nil {
 		log.Fatal(err)
 	}
