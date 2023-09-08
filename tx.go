@@ -29,15 +29,15 @@ type txj struct {
 
 func buildStruct(tx *schema.Tx) txj {
 	md := tx_metadata{
-		Id:       tx.Metadata.Id,
-		Ts:       tx.Metadata.Ts,
-		Eh:       hex.EncodeToString(tx.Metadata.EH),
-		Alh:      hex.EncodeToString(tx.Metadata.PrevAlh),
-		nentries: tx.Metadata.Nentries,
-		blTxId:   tx.Metadata.BlTxId,
-		blRoot:   tx.Metadata.BlRoot,
+		Id:       tx.Header.Id,
+		Ts:       tx.Header.Ts,
+		Eh:       hex.EncodeToString(tx.Header.EH),
+		Alh:      hex.EncodeToString(tx.Header.PrevAlh),
+		nentries: tx.Header.Nentries,
+		blTxId:   tx.Header.BlTxId,
+		blRoot:   tx.Header.BlRoot,
 	}
-	entries := make([]tx_entry, tx.Metadata.Nentries)
+	entries := make([]tx_entry, tx.Header.Nentries)
 	for i, v := range tx.Entries {
 		entries[i].Key = string(v.Key)
 		entries[i].Hash = hex.EncodeToString(v.HValue)

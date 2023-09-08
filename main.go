@@ -5,31 +5,34 @@ import (
 	"log"
 
 	"encoding/json"
+	"flag"
 	"github.com/codenotary/immudb/pkg/api/schema"
 	immuclient "github.com/codenotary/immudb/pkg/client"
 	"google.golang.org/grpc/metadata"
 	"immudumper/zfile"
-	"flag"
 )
+
 var config struct {
-        Address   string
-        Port      int
-        Username  string
-        Password  string
-        DBName    string
+	Address  string
+	Port     int
+	Username string
+	Password string
+	DBName   string
+	Values   bool
 }
 
 func init() {
-        flag.StringVar(&config.Address, "address", "", "IP address of immudb server")
-        flag.IntVar(&config.Port, "port", 3322, "Port number of immudb server")
-        flag.StringVar(&config.Username, "user", "immudb", "Username for authenticating to immudb")
-        flag.StringVar(&config.Password, "pass", "immudb", "Password for authenticating to immudb")
-        flag.StringVar(&config.DBName, "db", "defaultdb", "Name of the database to use")
-        flag.Parse()
+	flag.StringVar(&config.Address, "address", "", "IP address of immudb server")
+	flag.IntVar(&config.Port, "port", 3322, "Port number of immudb server")
+	flag.StringVar(&config.Username, "user", "immudb", "Username for authenticating to immudb")
+	flag.StringVar(&config.Password, "pass", "immudb", "Password for authenticating to immudb")
+	flag.StringVar(&config.DBName, "db", "defaultdb", "Name of the database to use")
+	flag.BoolVar(&config.Values, "values", false, "Dump values (instead of hash chains)")
+	flag.Parse()
 }
 
 func connect() (immuclient.ImmuClient, context.Context) {
-        opts := immuclient.DefaultOptions().WithAddress(config.Address).WithPort(config.Port)
+	opts := immuclient.DefaultOptions().WithAddress(config.Address).WithPort(config.Port)
 	client, err := immuclient.NewImmuClient(opts)
 	if err != nil {
 		log.Fatal(err)
@@ -77,8 +80,14 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		s := buildStruct(tx)
-		j, err := json.Marshal(s)
+		var j []byte
+		if config.Values {
+			s := buildKv(client, ctx, tx)
+			j, err = json.Marshal(s)
+		} else {
+			s := buildStruct(tx)
+			j, err = json.Marshal(s)
+		}
 		if err != nil {
 			log.Fatal(err)
 		}
