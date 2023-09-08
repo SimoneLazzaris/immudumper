@@ -9,8 +9,8 @@ import (
 )
 
 type kv struct {
-	Key   []byte `json:"key"`
-	Value []byte `json:"value"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 func buildKv(client immuclient.ImmuClient, ctx context.Context, tx *schema.Tx) []kv {
@@ -22,7 +22,7 @@ func buildKv(client immuclient.ImmuClient, ctx context.Context, tx *schema.Tx) [
 			log.Printf("Error: %s", err.Error())
 			continue
 		}
-		ret = append(ret, kv{Key: k.Key, Value: entry.Value})
+		ret = append(ret, kv{Key: strconv.Quote(string(k.Key)), Value: strconv.Quote(string(entry.Value))})
 	}
 	return ret
 }
